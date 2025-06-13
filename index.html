@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Airbnb Planner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+    .step {
+      display: none;
+      margin-bottom: 20px;
+    }
+    .step.active {
+      display: block;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: #007bff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .btn:disabled {
+      background: #ccc;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select {
+      padding: 5px;
+      width: 100%;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Airbnb Investment Planner</h2>
+
+  <!-- Step 1: Personal Info -->
+  <div class="step active" id="step1">
+    <label>Full Name:</label>
+    <input type="text" id="full_name" />
+    <label>Email:</label>
+    <input type="email" id="email" />
+    <button class="btn" onclick="nextStep(1)">Next</button>
+  </div>
+
+  <!-- Step 2: Apartment Type -->
+  <div class="step" id="step2">
+    <label>Apartment Type:</label>
+    <label><input type="radio" name="apartment_type" value="Studio" /> Studio</label>
+    <label><input type="radio" name="apartment_type" value="1-Bedroom" /> 1-Bedroom</label>
+    <label>Location:</label>
+    <select id="location_dropdown"></select>
+    <div id="apartment_info" style="margin-top: 10px;">
+      <p><strong>Rent:</strong> KES <span id="rent_display"></span></p>
+      <p><strong>Deposit:</strong> KES <span id="deposit_display"></span></p>
+    </div>
+    <button class="btn" onclick="prevStep(1)">Back</button>
+    <button class="btn" onclick="nextStep(2)">Next</button>
+  </div>
+
+  <!-- Step 3: Financing -->
+  <div class="step" id="step3">
+    <label>Select Institution:</label>
+    <select id="institution_dropdown"></select>
+    <label>Select Loan Product:</label>
+    <select id="loan_dropdown"></select>
+    <div id="loan_info">
+      <p><strong>Loan Limit:</strong> <span id="loan_limit"></span></p>
+      <p><strong>Interest Rate:</strong> <span id="interest_rate"></span></p>
+      <p><strong>Loan Term:</strong> <span id="loan_term"></span> months</p>
+      <p><strong>Multiplier (if SACCO):</strong> <span id="loan_multiplier"></span></p>
+    </div>
+    <button class="btn" onclick="prevStep(2)">Back</button>
+    <button class="btn" onclick="nextStep(3)">Next</button>
+  </div>
+
+  <!-- Step 4: Contribution -->
+  <div class="step" id="step4">
+    <label>Your Available Capital:</label>
+    <input type="number" id="user_capital" />
+    <p><strong>Total Needed:</strong> KES 260,000</p>
+    <p><strong>Loan Required:</strong> KES <span id="loan_required"></span></p>
+    <p><strong>Loan You Qualify For:</strong> KES <span id="qualified_amount"></span></p>
+    <button class="btn" onclick="prevStep(3)">Back</button>
+    <button class="btn" onclick="downloadPDF()">Download PDF</button>
+  </div>
+
+  <script>
+    const TOTAL_COST = 260000;
+
+    const steps = document.querySelectorAll('.step');
+    function nextStep(n) {
+      steps[n-1].classList.remove('active');
+      steps[n].classList.add('active');
+    }
+    function prevStep(n) {
+      steps[n].classList.remove('active');
+      steps[n-1].classList.add('active');
+    }
+
+    document.getElementById("user_capital").addEventListener("input", function () {
+      const capital = parseInt(this.value || "0");
+      document.getElementById("loan_required").innerText = TOTAL_COST - capital;
+      // Placeholder: update qualified loan amount
+      document.getElementById("qualified_amount").innerText = "TBD";
+    });
+
+    function downloadPDF() {
+      alert("PDF download feature will be added here.");
+    }
+
+    // Firebase config (replace with your actual details)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID",
+      measurementId: "YOUR_MEASUREMENT_ID"
+    };
+
+    // Firebase logic to be added here later (for loading data)
+  </script>
+</body>
+</html>
