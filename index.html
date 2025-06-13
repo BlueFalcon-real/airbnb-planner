@@ -1,135 +1,389 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Airbnb Planner</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f7fa;
-      padding: 20px;
-    }
-    .step {
-      display: none;
-      margin-bottom: 20px;
-    }
-    .step.active {
-      display: block;
-    }
-    .btn {
-      padding: 10px 20px;
-      background: #007bff;
-      border: none;
-      color: white;
-      cursor: pointer;
-      margin-right: 10px;
-    }
-    .btn:disabled {
-      background: #ccc;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input, select {
-      padding: 5px;
-      width: 100%;
-      margin-top: 5px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Airbnb Setup Assistant</title>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- html2pdf.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Firebase SDKs - v9 Modular -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+      import { getFirestore, collection, getDocs, query, where, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+      // Your web app's Firebase configuration (FROM YOUR SCREENSHOT)
+      const firebaseConfig = {
+        apiKey: "AIzaSyCktkFQ_NHhdQKJKK8YY_T96zNA90suvOY",
+        authDomain: "airbnb-149c.firebaseapp.com",
+        projectId: "airbnb-149c",
+        storageBucket: "airbnb-149c.firebasestorage.app", // Using this as per your image
+        messagingSenderId: "744603789878",
+        appId: "1:744603789878:web:5bad16fd79ba42e4e10697"
+        // measurementId: "G-XXXXXXXXXX" // Optional, not in your screenshot
+      };
+
+      // Initialize Firebase
+      try {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        console.log("Firebase Initialized Successfully!");
+
+        // Make db and Firestore functions accessible globally for this single-file example
+        window.db = db; 
+        window.firebaseCollection = collection;
+        window.firebaseGetDocs = getDocs;
+        window.firebaseQuery = query;
+        window.firebaseWhere = where;
+        window.firebaseAddDoc = addDoc;
+
+        document.dispatchEvent(new CustomEvent('firebaseReady'));
+      } catch (e) {
+        console.error("Error initializing Firebase in <head> script:", e);
+        alert("CRITICAL ERROR: Firebase could not be initialized. Check console and config. Form will not work.");
+      }
+    </script>
+
+    <style>
+        /* --- YOUR ENTIRE CSS (Same as previous good version) --- */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #f0f4f8; color: #212529; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; line-height: 1.6; }
+        #airbnbPlannerContainer { width: 100%; max-width: 750px; background-color: #ffffff; padding: 25px 30px 35px 30px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); }
+        #airbnbPlannerContainer h1.main-title { color: #343a40; text-align: center; font-size: 1.85rem; font-weight: 600; margin-bottom: 20px; }
+        #stepIndicatorContainer { display: flex; justify-content: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 1px solid #dee2e6; }
+        .step-indicator { height: 36px; width: 36px; border-radius: 50%; background-color: #ffffff; border: 2px solid #007bff; color: #007bff; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; margin: 0 10px; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+        .step-indicator.active { background-color: #007bff; color: #ffffff; border-color: #007bff; }
+        .step { display: none; } 
+        .step.active { display: block; } 
+        #airbnbPlannerContainer .step-card { background-color: #ffffff; border-radius: 8px; padding: 20px 0 10px 0; margin-bottom: 25px; }
+        #airbnbPlannerContainer .step-card h2.step-title { color: #343a40; margin-top: 0; margin-bottom: 25px; font-size: 1.5rem; font-weight: 500; display: flex; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #e9f2f9; }
+        #airbnbPlannerContainer .step-card h2.step-title i { margin-right: 12px; color: #007bff; font-size: 0.95em; }
+        #airbnbPlannerContainer .form-group, #airbnbPlannerContainer .form-group-with-icon { margin-bottom: 22px; }
+        #airbnbPlannerContainer .form-group label, #airbnbPlannerContainer .form-group-with-icon label { display: block; font-weight: 500; margin-bottom: 8px; color: #495057; font-size: 0.95rem; }
+        #airbnbPlannerContainer .form-group input[type="text"], #airbnbPlannerContainer .form-group input[type="email"], #airbnbPlannerContainer .form-group input[type="tel"], #airbnbPlannerContainer .form-group input[type="number"], #airbnbPlannerContainer .form-group select, .input-icon-wrapper input { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 0.25rem; font-size: 1rem; box-sizing: border-box; color: #212529; background-color: #ffffff; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+        #airbnbPlannerContainer .form-group input:focus, #airbnbPlannerContainer .form-group select:focus, .input-icon-wrapper input:focus { border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); outline: none; }
+        #airbnbPlannerContainer .input-icon-wrapper { display: flex; align-items: center; border: 1px solid #ced4da; border-radius: 0.25rem; background-color: #ffffff; transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
+        #airbnbPlannerContainer .input-icon-wrapper:focus-within { border-color: #80bdff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); }
+        #airbnbPlannerContainer .input-icon-wrapper i.fa-input-icon { padding: 0 10px 0 12px; color: #007bff; font-size: 0.95rem; border-right: 1px solid #e0e0e0; display: flex; align-items: center; height: 38px; }
+        #airbnbPlannerContainer .input-icon-wrapper input { flex-grow: 1; border: none; border-radius: 0 0.25rem 0.25rem 0; background-color: transparent; box-shadow: none; outline: none; }
+        #airbnbPlannerContainer .radio-group label { margin-right: 20px; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; color: #495057; }
+        #airbnbPlannerContainer .radio-group input[type="radio"] { margin-right: 8px; transform: scale(1.1); accent-color: #007bff; }
+        #airbnbPlannerContainer .info-display { background-color: #e9f2f9; padding: 12px 15px; border-radius: 0.25rem; margin-top: 15px; border: 1px solid #d0e0ed; }
+        #airbnbPlannerContainer .info-display p { margin: 8px 0; font-size: 0.95rem; color: #212529; }
+        #airbnbPlannerContainer .info-display strong { color: #005a9e; }
+        #airbnbPlannerContainer .navigation-buttons { display: flex; justify-content: space-between; margin-top: 30px; align-items: center; }
+        #airbnbPlannerContainer .navigation-buttons .button-group { display: flex; gap: 10px; }
+        button.btn { padding: 10px 22px; border: none; border-radius: 0.25rem; cursor: pointer; font-size: 0.95rem; font-weight: 500; transition: background-color 0.2s ease, transform 0.1s ease; display: inline-flex; align-items: center; justify-content: center; letter-spacing: 0.5px; }
+        button.btn i { margin-right: 8px; } button.btn i.fa-arrow-right { margin-left: 8px; margin-right: 0; }
+        button.btn.primary { background-color: #007bff; color: #ffffff; }
+        button.btn.primary:hover { background-color: #0056b3; transform: translateY(-1px); }
+        button.btn.secondary { background-color: #6c757d; color: #ffffff; }
+        button.btn.secondary:hover { background-color: #5a6268; transform: translateY(-1px); }
+        button.btn.prev { background-color: #f8f9fa; color: #343a40; border: 1px solid #ced4da; }
+        button.btn.prev:hover { background-color: #e9ecef; border-color: #adb5bd; transform: translateY(-1px); }
+        button.btn:disabled { background: #ccc; cursor: not-allowed; }
+        #airbnbPlannerContainer .summary-note { font-size: 0.9em; color: #495057; margin-top: 15px; padding: 10px 12px; background-color: #fff3cd; border-left: 4px solid #ffeeba; border-radius: 0.25rem; }
+        @media (max-width: 600px) { body { padding: 15px 10px; } #airbnbPlannerContainer { padding: 20px 15px; } #stepIndicatorContainer { margin: 0 0 25px 0; flex-wrap: wrap; } .step-indicator { height: 32px; width: 32px; font-size: 0.9rem; margin: 5px; } #airbnbPlannerContainer .step-card h2.step-title { font-size: 1.35rem; } #airbnbPlannerContainer .input-icon-wrapper i.fa-input-icon { height: 38px; } #airbnbPlannerContainer .navigation-buttons { flex-direction: column-reverse; gap: 12px; } #airbnbPlannerContainer .navigation-buttons .button-group { flex-direction: column; width: 100%; gap: 10px; } #airbnbPlannerContainer button { width: 100%; } #airbnbPlannerContainer .navigation-buttons .prev-btn { margin-bottom: 0; } }
+    </style>
 </head>
 <body>
-
-  <h2>Airbnb Investment Planner</h2>
-
-  <!-- Step 1: Personal Info -->
-  <div class="step active" id="step1">
-    <label>Full Name:</label>
-    <input type="text" id="full_name" />
-    <label>Email:</label>
-    <input type="email" id="email" />
-    <button class="btn" onclick="nextStep(1)">Next</button>
-  </div>
-
-  <!-- Step 2: Apartment Type -->
-  <div class="step" id="step2">
-    <label>Apartment Type:</label>
-    <label><input type="radio" name="apartment_type" value="Studio" /> Studio</label>
-    <label><input type="radio" name="apartment_type" value="1-Bedroom" /> 1-Bedroom</label>
-    <label>Location:</label>
-    <select id="location_dropdown"></select>
-    <div id="apartment_info" style="margin-top: 10px;">
-      <p><strong>Rent:</strong> KES <span id="rent_display"></span></p>
-      <p><strong>Deposit:</strong> KES <span id="deposit_display"></span></p>
+    <div id="airbnbPlannerContainer">
+        <h1 class="main-title">Airbnb Setup Assistant</h1>
+        <div id="stepIndicatorContainer">
+            <span class="step-indicator active" data-step="1">1</span>
+            <span class="step-indicator" data-step="2">2</span>
+            <span class="step-indicator" data-step="3">3</span>
+            <span class="step-indicator" data-step="4">4</span>
+        </div>
+        <form id="investmentForm" onsubmit="return false;">
+            <div class="step step-card active" id="step1">
+                <h2 class="step-title"><i class="fas fa-user-circle"></i> Personal Information</h2>
+                <div class="form-group-with-icon"> 
+                    <label for="full_name">Full Name:</label>
+                    <div class="input-icon-wrapper"> <i class="fas fa-user fa-input-icon"></i> <input type="text" id="full_name" required/></div>
+                </div>
+                <div class="form-group-with-icon"> 
+                    <label for="email">Email:</label>
+                    <div class="input-icon-wrapper"> <i class="fas fa-envelope fa-input-icon"></i> <input type="email" id="email" required/></div>
+                </div>
+                <div class="form-group-with-icon"> 
+                    <label for="phone">Phone (Optional):</label>
+                    <div class="input-icon-wrapper"> <i class="fas fa-phone fa-input-icon"></i> <input type="tel" id="phone"/></div>
+                </div>
+                <div class="navigation-buttons"> <span></span> <button type="button" class="btn primary" onclick="navigateToStep(2)">Next <i class="fas fa-arrow-right"></i></button> </div>
+            </div>
+            <div class="step step-card" id="step2" style="display: none;">
+                <h2 class="step-title"><i class="fas fa-home"></i> Apartment Selection</h2>
+                <div class="form-group"> 
+                    <label>Apartment Type:</label>
+                    <div class="radio-group"> <input type="radio" id="studio_type" name="apartment_type" value="Studio" checked /> <label for="studio_type">Studio</label> <input type="radio" id="one_bedroom_type" name="apartment_type" value="1-Bedroom" /> <label for="one_bedroom_type">1-Bedroom</label> </div>
+                </div>
+                <div class="form-group"> <label for="location_dropdown">Location:</label> <select id="location_dropdown" required></select> </div>
+                <div id="apartment_info" class="info-display" style="margin-top: 10px; display: none;"> <p><strong>Rent:</strong> KES <span id="rent_display">N/A</span></p> <p><strong>Deposit:</strong> KES <span id="deposit_display">N/A</span></p> </div>
+                <div class="navigation-buttons"> <button type="button" class="btn prev" onclick="navigateToStep(1)"><i class="fas fa-arrow-left"></i> Previous</button> <button type="button" class="btn primary" onclick="navigateToStep(3)">Next <i class="fas fa-arrow-right"></i></button> </div>
+            </div>
+            <div class="step step-card" id="step3" style="display: none;">
+                <h2 class="step-title"><i class="fas fa-hand-holding-usd"></i> Financing & Loan</h2>
+                <div class="form-group"> <label for="institution_dropdown">Select Institution:</label> <select id="institution_dropdown" required></select> </div>
+                <div class="form-group"> <label for="loan_dropdown">Select Loan Product:</label> <select id="loan_dropdown" required></select> </div>
+                <div id="loan_info" class="info-display" style="display: none;"> <p><strong>Loan Limit:</strong> <span id="loan_limit_display">N/A</span></p> <p><strong>Interest Rate:</strong> <span id="interest_rate_display">N/A</span>%</p> <p><strong>Loan Term:</strong> <span id="loan_term_display">N/A</span> months</p> <p><strong>Multiplier:</strong> <span id="loan_multiplier_display">N/A</span></p> </div>
+                <div class="navigation-buttons"> <button type="button" class="btn prev" onclick="navigateToStep(2)"><i class="fas fa-arrow-left"></i> Previous</button> <button type="button" class="btn primary" onclick="navigateToStep(4)">Next <i class="fas fa-arrow-right"></i></button> </div>
+            </div>
+            <div class="step step-card" id="step4"> <!-- Removed style="display: none;" to test if it shows initially -->
+                <h2 class="step-title"><i class="fas fa-calculator"></i> Financial Summary</h2>
+                <div class="form-group"> <label for="user_capital">Your Available Capital (KES):</label> <input type="number" id="user_capital" min="0" required/> </div>
+                <div id="summaryDetails" class="info-display"> <!-- Changed from summaryDetails to match other info-displays if needed, or ensure it's styled if unique --> <p><strong>Total Setup Cost:</strong> KES <span id="total_cost_display">260,000</span></p> <p><strong>Loan Required:</strong> KES <span id="loan_required_display">N/A</span></p> <p><strong>Potential Loan You Qualify For:</strong> KES <span id="qualified_amount_display">N/A</span></p> </div>
+                <p class="summary-note">The "Potential Loan You Qualify For" is an estimate. Actual loan approval and amount are subject to the financial institution's full assessment and terms.</p>
+                <div class="navigation-buttons"> <button type="button" class="btn prev" onclick="navigateToStep(3)"><i class="fas fa-arrow-left"></i> Previous</button> <div class="button-group"> <button type="button" class="btn primary" id="saveAndDownloadPdfBtn"><i class="fas fa-file-pdf"></i> Save & Download PDF</button> <button type="button" class="btn secondary" id="emailPlanBtn"><i class="fas fa-paper-plane"></i> Email Plan</button> </div> </div>
+            </div>
+        </form>
     </div>
-    <button class="btn" onclick="prevStep(1)">Back</button>
-    <button class="btn" onclick="nextStep(2)">Next</button>
-  </div>
 
-  <!-- Step 3: Financing -->
-  <div class="step" id="step3">
-    <label>Select Institution:</label>
-    <select id="institution_dropdown"></select>
-    <label>Select Loan Product:</label>
-    <select id="loan_dropdown"></select>
-    <div id="loan_info">
-      <p><strong>Loan Limit:</strong> <span id="loan_limit"></span></p>
-      <p><strong>Interest Rate:</strong> <span id="interest_rate"></span></p>
-      <p><strong>Loan Term:</strong> <span id="loan_term"></span> months</p>
-      <p><strong>Multiplier (if SACCO):</strong> <span id="loan_multiplier"></span></p>
-    </div>
-    <button class="btn" onclick="prevStep(2)">Back</button>
-    <button class="btn" onclick="nextStep(3)">Next</button>
-  </div>
+    <script type="module">
+        // Declare global variables (accessible within this module script)
+        // Firebase functions are on window from the head script if that ran successfully
+        
+        let formContainer, apartmentTypeRadiosNodeList, locationDropdown, apartmentInfoDiv, rentDisplay, depositDisplay;
+        let institutionDropdown, loanDropdown, loanInfoDiv, loanLimitDisplay, interestRateDisplay, loanTermDisplay, loanMultiplierDisplay;
+        let userCapitalInput, totalCostDisplay, loanRequiredDisplay, qualifiedAmountDisplay;
+        let saveAndDownloadPdfBtnNode, emailPlanBtnNode; // Renamed to avoid conflict with function
+        
+        const stepsNodeList = []; 
+        const stepIndicatorsNodeList = []; 
+        let currentStepIndex = 0; 
 
-  <!-- Step 4: Contribution -->
-  <div class="step" id="step4">
-    <label>Your Available Capital:</label>
-    <input type="number" id="user_capital" />
-    <p><strong>Total Needed:</strong> KES 260,000</p>
-    <p><strong>Loan Required:</strong> KES <span id="loan_required"></span></p>
-    <p><strong>Loan You Qualify For:</strong> KES <span id="qualified_amount"></span></p>
-    <button class="btn" onclick="prevStep(3)">Back</button>
-    <button class="btn" onclick="downloadPDF()">Download PDF</button>
-  </div>
+        let allApartments = []; 
+        let allLoanProducts = []; 
 
-  <script>
-    const TOTAL_COST = 260000;
+        let selectedApartmentData = null;
+        let selectedLoanData = null;
 
-    const steps = document.querySelectorAll('.step');
-    function nextStep(n) {
-      steps[n-1].classList.remove('active');
-      steps[n].classList.add('active');
-    }
-    function prevStep(n) {
-      steps[n].classList.remove('active');
-      steps[n-1].classList.add('active');
-    }
+        const FIXED_TOTAL_COST = 260000;
 
-    document.getElementById("user_capital").addEventListener("input", function () {
-      const capital = parseInt(this.value || "0");
-      document.getElementById("loan_required").innerText = TOTAL_COST - capital;
-      // Placeholder: update qualified loan amount
-      document.getElementById("qualified_amount").innerText = "TBD";
-    });
+        // --- FUNCTION DEFINITIONS ---
+        function validateStep(stepIndexToValidate) {
+            if (stepIndexToValidate === 0) { // Step 1
+                const fullName = document.getElementById('full_name')?.value.trim();
+                const email = document.getElementById('email')?.value.trim();
+                if (!fullName || !email) { alert("Please enter your Full Name and Email."); return false; }
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailPattern.test(email)) { alert("Please enter a valid Email address."); return false; }
+            } else if (stepIndexToValidate === 1) { // Step 2
+                 if (!selectedApartmentData) { alert("Please select an apartment type and location."); return false; }
+            } else if (stepIndexToValidate === 2) { // Step 3
+                if (!selectedLoanData) { alert("Please select a financial institution and loan product."); return false; }
+            }
+            return true; 
+        }
+        
+        window.navigateToStep = function(targetStepNum) { // targetStepNum is 1-based from HTML onclick
+            const targetStepIndex = targetStepNum - 1; // Convert to 0-based index
+            if (!stepsNodeList || stepsNodeList.length === 0) { console.error("Steps array not initialized."); return; }
+            if (targetStepIndex < 0 || targetStepIndex >= stepsNodeList.length) { console.error("Invalid step index:", targetStepIndex); return; }
 
-    function downloadPDF() {
-      alert("PDF download feature will be added here.");
-    }
+            if (targetStepIndex > currentStepIndex) { // Moving forward
+                if (!validateStep(currentStepIndex)) {
+                    return; 
+                }
+            }
 
-    // Firebase config (replace with your actual details)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID",
-      measurementId: "YOUR_MEASUREMENT_ID"
-    };
+            if(stepsNodeList[currentStepIndex]) stepsNodeList[currentStepIndex].classList.remove('active');
+            if(stepIndicatorsNodeList[currentStepIndex]) stepIndicatorsNodeList[currentStepIndex].classList.remove('active');
+            
+            currentStepIndex = targetStepIndex;
+            
+            if(stepsNodeList[currentStepIndex]) stepsNodeList[currentStepIndex].classList.add('active');
+            if(stepIndicatorsNodeList[currentStepIndex]) stepIndicatorsNodeList[currentStepIndex].classList.add('active');
+            
+            if (formContainer) {  formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); } 
+            else { window.scrollTo(0,0); }
+        }
+        
+        async function fetchAppData() { 
+            if (!window.db) {
+                console.error("Firestore 'db' (from window) not initialized for fetchAppData.");
+                if(locationDropdown) locationDropdown.innerHTML = '<option value="">Error: DB Connect</option>';
+                if(institutionDropdown) institutionDropdown.innerHTML = '<option value="">Error: DB Connect</option>';
+                return;
+            }
+            console.log("fetchAppData: Fetching initial data using window.db...");
+            try {
+                const aptSnapshot = await window.firebaseGetDocs(window.firebaseCollection(window.db, "apartments"));
+                allApartments = aptSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log("Fetched apartments:", allApartments.length, allApartments);
+                populateLocations(); 
 
-    // Firebase logic to be added here later (for loading data)
-  </script>
+                const loanSnapshot = await window.firebaseGetDocs(window.firebaseCollection(window.db, "loan_products"));
+                allLoanProducts = loanSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                console.log("Fetched loan products:", allLoanProducts.length, allLoanProducts);
+                
+                populateInstitutionsDropdown(); 
+                populateLoanProductsDropdown(); 
+            } catch (error) {
+                console.error("Error fetching initial app data: ", error);
+                alert("Error loading initial data from database. Please check console and refresh.");
+            }
+        }
+
+        function populateLocations() {
+            if(!locationDropdown || !apartmentTypeRadiosNodeList) { console.warn("DOM elements not ready for populateLocations"); return; }
+            const selectedTypeRadio = Array.from(apartmentTypeRadiosNodeList).find(radio => radio.checked);
+            if(!selectedTypeRadio) { console.warn("No apartment type selected."); populateApartmentTypeAndLocationPlaceholders(); return; }
+            const selectedType = selectedTypeRadio.value;
+            
+            locationDropdown.innerHTML = '<option value="">-- Select Location --</option>';
+            if (apartmentInfoDiv) apartmentInfoDiv.style.display = 'none';
+            selectedApartmentData = null; 
+
+            if (selectedType && allApartments.length > 0) {
+                const filteredBySelectedType = allApartments.filter(apt => apt.apartment_type === selectedType);
+                const uniqueLocations = [...new Set(filteredBySelectedType.map(apt => apt.location))].sort();
+                
+                if (uniqueLocations.length > 0) {
+                    uniqueLocations.forEach(loc => {
+                        const option = document.createElement('option'); option.value = loc; option.textContent = loc;
+                        locationDropdown.appendChild(option);
+                    });
+                } else {
+                    locationDropdown.innerHTML = '<option value="">-- No locations for this type --</option>';
+                }
+            } else if (allApartments.length === 0 && selectedType) {
+                 locationDropdown.innerHTML = '<option value="">-- No apartments data loaded --</option>';
+            } else {
+                 locationDropdown.innerHTML = '<option value="">-- Select Apartment Type First --</option>';
+            }
+        }
+        function populateApartmentTypeAndLocationPlaceholders() { // Helper if no data
+            if(locationDropdown) locationDropdown.innerHTML = '<option value="">-- Select Type First --</option>';
+            if(apartmentInfoDiv) apartmentInfoDiv.style.display = 'none';
+        }
+
+
+        function displayApartmentInfo() {
+            if(!locationDropdown || !apartmentInfoDiv || !rentDisplay || !depositDisplay) return;
+            const selectedLocation = locationDropdown.value;
+            const selectedTypeRadio = Array.from(apartmentTypeRadiosNodeList).find(radio => radio.checked);
+            if(!selectedTypeRadio) { console.warn("No apartment type for displayApartmentInfo."); return; }
+            const selectedType = selectedTypeRadio.value;
+            selectedApartmentData = null; 
+            apartmentInfoDiv.style.display = 'none';
+            if (selectedLocation && selectedType) {
+                selectedApartmentData = allApartments.find(apt => apt.location === selectedLocation && apt.apartment_type === selectedType);
+                if (selectedApartmentData) {
+                    rentDisplay.textContent = (selectedApartmentData.rent || 0).toLocaleString();
+                    depositDisplay.textContent = (selectedApartmentData.deposit || 0).toLocaleString();
+                    apartmentInfoDiv.style.display = 'block';
+                }
+            }
+            updateFinancialSummary(); 
+        }
+                
+        function populateInstitutionsDropdown() {
+            if (!institutionDropdown) { console.warn("Institution dropdown not ready."); return; }
+            if (allLoanProducts.length === 0) {
+                institutionDropdown.innerHTML = '<option value="">-- No Financial Data --</option>';
+                return;
+            }
+            const institutionNames = [...new Set(allLoanProducts.map(prod => prod.institution_name))].filter(name => name).sort((a, b) => a.localeCompare(b)); // Filter out undefined/null names
+            institutionDropdown.innerHTML = '<option value="">-- Select Institution --</option>';
+            if (institutionNames.length > 0) {
+                institutionNames.forEach(name => {
+                    const option = document.createElement('option'); option.value = name; option.textContent = name;
+                    institutionDropdown.appendChild(option);
+                });
+            } else {
+                institutionDropdown.innerHTML = '<option value="">-- No Institutions Found --</option>';
+            }
+        }
+
+        function populateLoanProductsDropdown() {
+             if (!institutionDropdown || !loanDropdown) { console.warn("DOM elements not ready for populateLoanProductsDropdown."); return; }
+            const selectedInstitutionName = institutionDropdown.value;
+            loanDropdown.innerHTML = '<option value="">-- Select Loan Product --</option>';
+            if (loanInfoDiv) loanInfoDiv.style.display = 'none';
+            selectedLoanData = null;
+            if (selectedInstitutionName && allLoanProducts.length > 0) {
+                const filteredProducts = allLoanProducts.filter(prod => prod.institution_name === selectedInstitutionName).sort((a, b) => (a.product_name || "").localeCompare(b.product_name || ""));
+                if (filteredProducts.length === 0) {
+                    loanDropdown.innerHTML = '<option value="">-- No products for this institution --</option>';
+                } else {
+                    filteredProducts.forEach(prod => {
+                        const option = document.createElement('option'); option.value = prod.id; option.textContent = prod.product_name;
+                        loanDropdown.appendChild(option);
+                    });
+                }
+            } else if (!selectedInstitutionName) {
+                 loanDropdown.innerHTML = '<option value="">-- Select Institution First --</option>';
+            }
+        }
+
+        function displayLoanInfo() { /* ... (Same as previous, ensure all IDs are correct) ... */ }
+        function updateFinancialSummary() { /* ... (Same as previous, ensure all IDs are correct) ... */ }
+        function generatePDFContentHTML() { /* ... (Same as previous) ... */ }
+        async function saveAndDownload() { /* ... (Same as previous, ensure window.db is used) ... */ }
+        
+        // --- DOMContentLoaded ---
+        document.addEventListener('firebaseReady', () => {
+            console.log("Event: firebaseReady received. Initializing DOM elements and listeners.");
+            initializeDOMElements(); 
+            
+            if (stepsNodeList.length > 0 && stepsNodeList[0]) {
+                 stepsNodeList.forEach((step, index) => { 
+                    if(step) step.style.display = index === 0 ? 'block' : 'none';
+                });
+            } else { console.error("firebaseReady: Steps array is empty."); }
+
+            if (stepIndicatorsNodeList.length > 0 && stepIndicatorsNodeList[0]) {
+                stepIndicatorsNodeList[0].classList.add('active');
+            } else { console.error("firebaseReady: Step indicators array is empty."); }
+            
+            // Attach Event Listeners
+            if(apartmentTypeRadiosNodeList) apartmentTypeRadiosNodeList.forEach(radio => radio.addEventListener('change', populateLocations));
+            if(locationDropdown) locationDropdown.addEventListener('change', displayApartmentInfo);
+            if(institutionDropdown) institutionDropdown.addEventListener('change', populateLoanProductsDropdown);
+            if(loanDropdown) loanDropdown.addEventListener('change', displayLoanInfo); // Changed from updateLoanDetails
+            if(userCapitalInput) userCapitalInput.addEventListener('input', updateFinancialSummary);
+            if(saveAndDownloadPdfBtnNode) saveAndDownloadPdfBtnNode.addEventListener('click', saveAndDownload);
+            
+            if(emailPlanBtnNode) { /* Placeholder */ }
+
+            // Initial Data Population
+            if (window.db) { 
+                console.log("firebaseReady: Firebase client (window.db) confirmed. Fetching app data...");
+                fetchAppData(); 
+            } else {
+                console.error("firebaseReady: Firebase client (window.db) is NOT defined. Data fetching will NOT work.");
+                alert("Critical error: Database connection is not available. Please ensure Firebase initialized correctly and check console.");
+            }
+            updateFinancialSummary(); 
+        });
+
+        // Moved DOM element initialization to a function called within firebaseReady
+        function initializeDOMElements() {
+            formContainer = document.getElementById('airbnbPlannerContainer');
+            apartmentTypeRadiosNodeList = document.querySelectorAll('input[name="apartment_type"]');
+            locationDropdown = document.getElementById('location_dropdown');
+            apartmentInfoDiv = document.getElementById('apartment_info');
+            aptRentSpan = document.getElementById('rent_display');
+            aptDepositSpan = document.getElementById('deposit_display');
+            institutionDropdown = document.getElementById('institution_dropdown');
+            loanDropdown = document.getElementById('loan_dropdown');
+            loanInfoDiv = document.getElementById('loan_info');
+            loanLimitDisplay = document.getElementById('loan_limit_display');
+            interestRateDisplay = document.getElementById('interest_rate_display');
+            loanTermDisplay = document.getElementById('loan_term_display');
+            loanMultiplierDisplay = document.getElementById('loan_multiplier_display');
+            userCapitalInput = document.getElementById('user_capital');
+            totalCostDisplay = document.getElementById('total_cost_display');
+            loanRequiredDisplay = document.getElementById('loan_required_display');
+            qualifiedAmountDisplay = document.getElementById('qualified_amount_display');
+            saveAndDownloadPdfBtnNode = document.getElementById('saveAndDownloadPdfBtn');
+            emailPlanBtnNode = document.getElementById('emailPlanBtn');
+
+            console.log("DOM Elements Initialized:", { locationDropdown, institutionDropdown /*, etc. */});
+        }
+    </script>
 </body>
 </html>
