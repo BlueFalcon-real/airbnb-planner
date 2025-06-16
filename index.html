@@ -20,17 +20,17 @@
         apiKey: "AIzaSyCktkFQ_NHhdQKJKK8YY_T96zNA90suvOY",
         authDomain: "airbnb-149c.firebaseapp.com",
         projectId: "airbnb-149c",
-        storageBucket: "airbnb-149c.firebasestorage.app", // Using this as per your image
+        storageBucket: "airbnb-149c.firebasestorage.app", // As per your image
         messagingSenderId: "744603789878",
         appId: "1:744603789878:web:5bad16fd79ba42e4e10697"
-        // measurementId: "G-XXXXXXXXXX" // Optional, not in your screenshot
+        // measurementId: "G-XXXXXXXXXX" // Optional
       };
 
       // Initialize Firebase
       try {
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        console.log("Firebase Initialized Successfully!");
+        console.log("Firebase Initialized Successfully in HEAD script!");
 
         // Make db and Firestore functions accessible globally for this single-file example
         window.db = db; 
@@ -40,9 +40,10 @@
         window.firebaseWhere = where;
         window.firebaseAddDoc = addDoc;
 
+        // Dispatch event after Firebase is ready so the main script can react
         document.dispatchEvent(new CustomEvent('firebaseReady'));
       } catch (e) {
-        console.error("Error initializing Firebase in <head> script:", e);
+        console.error("CRITICAL: Error initializing Firebase in HEAD script:", e);
         alert("CRITICAL ERROR: Firebase could not be initialized. Check console and config. Form will not work.");
       }
     </script>
@@ -91,64 +92,23 @@
 <body>
     <div id="airbnbPlannerContainer">
         <h1 class="main-title">Airbnb Setup Assistant</h1>
-        <div id="stepIndicatorContainer">
-            <span class="step-indicator active" data-step="1">1</span>
-            <span class="step-indicator" data-step="2">2</span>
-            <span class="step-indicator" data-step="3">3</span>
-            <span class="step-indicator" data-step="4">4</span>
-        </div>
+        <div id="stepIndicatorContainer"> <span class="step-indicator active" data-step="1">1</span> <span class="step-indicator" data-step="2">2</span> <span class="step-indicator" data-step="3">3</span> <span class="step-indicator" data-step="4">4</span> </div>
         <form id="investmentForm" onsubmit="return false;">
-            <div class="step step-card active" id="step1">
-                <h2 class="step-title"><i class="fas fa-user-circle"></i> Personal Information</h2>
-                <div class="form-group-with-icon"> 
-                    <label for="full_name">Full Name:</label>
-                    <div class="input-icon-wrapper"> <i class="fas fa-user fa-input-icon"></i> <input type="text" id="full_name" required/></div>
-                </div>
-                <div class="form-group-with-icon"> 
-                    <label for="email">Email:</label>
-                    <div class="input-icon-wrapper"> <i class="fas fa-envelope fa-input-icon"></i> <input type="email" id="email" required/></div>
-                </div>
-                <div class="form-group-with-icon"> 
-                    <label for="phone">Phone (Optional):</label>
-                    <div class="input-icon-wrapper"> <i class="fas fa-phone fa-input-icon"></i> <input type="tel" id="phone"/></div>
-                </div>
-                <div class="navigation-buttons"> <span></span> <button type="button" class="btn primary" onclick="navigateToStep(2)">Next <i class="fas fa-arrow-right"></i></button> </div>
-            </div>
-            <div class="step step-card" id="step2" style="display: none;">
-                <h2 class="step-title"><i class="fas fa-home"></i> Apartment Selection</h2>
-                <div class="form-group"> 
-                    <label>Apartment Type:</label>
-                    <div class="radio-group"> <input type="radio" id="studio_type" name="apartment_type" value="Studio" checked /> <label for="studio_type">Studio</label> <input type="radio" id="one_bedroom_type" name="apartment_type" value="1-Bedroom" /> <label for="one_bedroom_type">1-Bedroom</label> </div>
-                </div>
-                <div class="form-group"> <label for="location_dropdown">Location:</label> <select id="location_dropdown" required></select> </div>
-                <div id="apartment_info" class="info-display" style="margin-top: 10px; display: none;"> <p><strong>Rent:</strong> KES <span id="rent_display">N/A</span></p> <p><strong>Deposit:</strong> KES <span id="deposit_display">N/A</span></p> </div>
-                <div class="navigation-buttons"> <button type="button" class="btn prev" onclick="navigateToStep(1)"><i class="fas fa-arrow-left"></i> Previous</button> <button type="button" class="btn primary" onclick="navigateToStep(3)">Next <i class="fas fa-arrow-right"></i></button> </div>
-            </div>
-            <div class="step step-card" id="step3" style="display: none;">
-                <h2 class="step-title"><i class="fas fa-hand-holding-usd"></i> Financing & Loan</h2>
-                <div class="form-group"> <label for="institution_dropdown">Select Institution:</label> <select id="institution_dropdown" required></select> </div>
-                <div class="form-group"> <label for="loan_dropdown">Select Loan Product:</label> <select id="loan_dropdown" required></select> </div>
-                <div id="loan_info" class="info-display" style="display: none;"> <p><strong>Loan Limit:</strong> <span id="loan_limit_display">N/A</span></p> <p><strong>Interest Rate:</strong> <span id="interest_rate_display">N/A</span>%</p> <p><strong>Loan Term:</strong> <span id="loan_term_display">N/A</span> months</p> <p><strong>Multiplier:</strong> <span id="loan_multiplier_display">N/A</span></p> </div>
-                <div class="navigation-buttons"> <button type="button" class="btn prev" onclick="navigateToStep(2)"><i class="fas fa-arrow-left"></i> Previous</button> <button type="button" class="btn primary" onclick="navigateToStep(4)">Next <i class="fas fa-arrow-right"></i></button> </div>
-            </div>
-            <div class="step step-card" id="step4"> <!-- Removed style="display: none;" to test if it shows initially -->
-                <h2 class="step-title"><i class="fas fa-calculator"></i> Financial Summary</h2>
-                <div class="form-group"> <label for="user_capital">Your Available Capital (KES):</label> <input type="number" id="user_capital" min="0" required/> </div>
-                <div id="summaryDetails" class="info-display"> <!-- Changed from summaryDetails to match other info-displays if needed, or ensure it's styled if unique --> <p><strong>Total Setup Cost:</strong> KES <span id="total_cost_display">260,000</span></p> <p><strong>Loan Required:</strong> KES <span id="loan_required_display">N/A</span></p> <p><strong>Potential Loan You Qualify For:</strong> KES <span id="qualified_amount_display">N/A</span></p> </div>
-                <p class="summary-note">The "Potential Loan You Qualify For" is an estimate. Actual loan approval and amount are subject to the financial institution's full assessment and terms.</p>
-                <div class="navigation-buttons"> <button type="button" class="btn prev" onclick="navigateToStep(3)"><i class="fas fa-arrow-left"></i> Previous</button> <div class="button-group"> <button type="button" class="btn primary" id="saveAndDownloadPdfBtn"><i class="fas fa-file-pdf"></i> Save & Download PDF</button> <button type="button" class="btn secondary" id="emailPlanBtn"><i class="fas fa-paper-plane"></i> Email Plan</button> </div> </div>
-            </div>
+            <div class="step step-card active" id="step1"> <h2 class="step-title"><i class="fas fa-user-circle"></i> Personal Information</h2> <div class="form-group-with-icon"> <label for="full_name">Full Name:</label> <div class="input-icon-wrapper"> <i class="fas fa-user fa-input-icon"></i> <input type="text" id="full_name" required/></div> </div> <div class="form-group-with-icon"> <label for="email">Email:</label> <div class="input-icon-wrapper"> <i class="fas fa-envelope fa-input-icon"></i> <input type="email" id="email" required/></div> </div> <div class="form-group-with-icon"> <label for="phone">Phone (Optional):</label> <div class="input-icon-wrapper"> <i class="fas fa-phone fa-input-icon"></i> <input type="tel" id="phone"/></div> </div> <div class="navigation-buttons"> <span></span> <button type="button" class="btn primary next-btn-js" data-nextstep="2">Next <i class="fas fa-arrow-right"></i></button> </div> </div>
+            <div class="step step-card" id="step2" style="display: none;"> <h2 class="step-title"><i class="fas fa-home"></i> Apartment Selection</h2> <div class="form-group"> <label>Apartment Type:</label> <div class="radio-group"> <input type="radio" id="studio_type" name="apartment_type" value="Studio" checked /> <label for="studio_type">Studio</label> <input type="radio" id="one_bedroom_type" name="apartment_type" value="1-Bedroom" /> <label for="one_bedroom_type">1-Bedroom</label> </div> </div> <div class="form-group"> <label for="location_dropdown">Location:</label> <select id="location_dropdown" required></select> </div> <div id="apartment_info" class="info-display" style="margin-top: 10px; display: none;"> <p><strong>Rent:</strong> KES <span id="rent_display">N/A</span></p> <p><strong>Deposit:</strong> KES <span id="deposit_display">N/A</span></p> </div> <div class="navigation-buttons"> <button type="button" class="btn prev prev-btn-js" data-prevstep="1"><i class="fas fa-arrow-left"></i> Previous</button> <button type="button" class="btn primary next-btn-js" data-nextstep="3">Next <i class="fas fa-arrow-right"></i></button> </div> </div>
+            <div class="step step-card" id="step3" style="display: none;"> <h2 class="step-title"><i class="fas fa-hand-holding-usd"></i> Financing & Loan</h2> <div class="form-group"> <label for="institution_dropdown">Select Institution:</label> <select id="institution_dropdown" required></select> </div> <div class="form-group"> <label for="loan_dropdown">Select Loan Product:</label> <select id="loan_dropdown" required></select> </div> <div id="loan_info" class="info-display" style="display: none;"> <p><strong>Loan Limit:</strong> <span id="loan_limit_display">N/A</span></p> <p><strong>Interest Rate:</strong> <span id="interest_rate_display">N/A</span>%</p> <p><strong>Loan Term:</strong> <span id="loan_term_display">N/A</span> months</p> <p><strong>Multiplier:</strong> <span id="loan_multiplier_display">N/A</span></p> </div> <div class="navigation-buttons"> <button type="button" class="btn prev prev-btn-js" data-prevstep="2"><i class="fas fa-arrow-left"></i> Previous</button> <button type="button" class="btn primary next-btn-js" data-nextstep="4">Next <i class="fas fa-arrow-right"></i></button> </div> </div>
+            <div class="step step-card" id="step4" style="display: none;"> <h2 class="step-title"><i class="fas fa-calculator"></i> Financial Summary</h2> <div class="form-group"> <label for="user_capital">Your Available Capital (KES):</label> <input type="number" id="user_capital" min="0" required/> </div> <div id="summaryDetails" class="info-display"> <p><strong>Total Setup Cost:</strong> KES <span id="total_cost_display">260,000</span></p> <p><strong>Loan Required:</strong> KES <span id="loan_required_display">N/A</span></p> <p><strong>Potential Loan You Qualify For:</strong> KES <span id="qualified_amount_display">N/A</span></p> </div> <p class="summary-note">The "Potential Loan You Qualify For" is an estimate. Actual loan approval is subject to assessment.</p> <div class="navigation-buttons"> <button type="button" class="btn prev prev-btn-js" data-prevstep="3"><i class="fas fa-arrow-left"></i> Previous</button> <div class="button-group"> <button type="button" class="btn primary" id="saveAndDownloadPdfBtn"><i class="fas fa-file-pdf"></i> Save & Download PDF</button> <button type="button" class="btn secondary" id="emailPlanBtn"><i class="fas fa-paper-plane"></i> Email Plan</button> </div> </div> </div>
         </form>
     </div>
 
     <script type="module">
-        // Declare global variables (accessible within this module script)
-        // Firebase functions are on window from the head script if that ran successfully
+        // Global/Module scope variables
+        // Firebase functions (db, firebaseCollection etc.) are set on `window` by the head script
         
         let formContainer, apartmentTypeRadiosNodeList, locationDropdown, apartmentInfoDiv, rentDisplay, depositDisplay;
         let institutionDropdown, loanDropdown, loanInfoDiv, loanLimitDisplay, interestRateDisplay, loanTermDisplay, loanMultiplierDisplay;
         let userCapitalInput, totalCostDisplay, loanRequiredDisplay, qualifiedAmountDisplay;
-        let saveAndDownloadPdfBtnNode, emailPlanBtnNode; // Renamed to avoid conflict with function
+        let saveAndDownloadPdfBtnNode, emailPlanBtnNode;
         
         const stepsNodeList = []; 
         const stepIndicatorsNodeList = []; 
@@ -164,27 +124,32 @@
 
         // --- FUNCTION DEFINITIONS ---
         function validateStep(stepIndexToValidate) {
-            if (stepIndexToValidate === 0) { // Step 1
+            console.log("Validating step index:", stepIndexToValidate);
+            if (stepIndexToValidate === 0) { // Step 1: Personal Info
                 const fullName = document.getElementById('full_name')?.value.trim();
                 const email = document.getElementById('email')?.value.trim();
                 if (!fullName || !email) { alert("Please enter your Full Name and Email."); return false; }
                 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailPattern.test(email)) { alert("Please enter a valid Email address."); return false; }
-            } else if (stepIndexToValidate === 1) { // Step 2
+            } else if (stepIndexToValidate === 1) { // Step 2: Apartment
                  if (!selectedApartmentData) { alert("Please select an apartment type and location."); return false; }
-            } else if (stepIndexToValidate === 2) { // Step 3
+            } else if (stepIndexToValidate === 2) { // Step 3: Financing
                 if (!selectedLoanData) { alert("Please select a financial institution and loan product."); return false; }
             }
+            console.log("Step", stepIndexToValidate + 1, "is valid.");
             return true; 
         }
         
-        window.navigateToStep = function(targetStepNum) { // targetStepNum is 1-based from HTML onclick
-            const targetStepIndex = targetStepNum - 1; // Convert to 0-based index
-            if (!stepsNodeList || stepsNodeList.length === 0) { console.error("Steps array not initialized."); return; }
-            if (targetStepIndex < 0 || targetStepIndex >= stepsNodeList.length) { console.error("Invalid step index:", targetStepIndex); return; }
+        // NOTE: navigateToStep is now navigateToStepLogic because it's called by event listeners, not inline HTML
+        function navigateToStepLogic(targetStepIndex) { 
+            if (!stepsNodeList || stepsNodeList.length === 0) { console.error("Steps array not initialized in navigateToStepLogic"); return; }
+            if (targetStepIndex < 0 || targetStepIndex >= stepsNodeList.length) { console.error("Invalid target step index for navigation:", targetStepIndex); return; }
+
+            console.log(`Attempting to navigate. Current index: ${currentStepIndex}, Target index: ${targetStepIndex}`);
 
             if (targetStepIndex > currentStepIndex) { // Moving forward
                 if (!validateStep(currentStepIndex)) {
+                    console.log("Validation failed for current step, navigation stopped.");
                     return; 
                 }
             }
@@ -196,6 +161,7 @@
             
             if(stepsNodeList[currentStepIndex]) stepsNodeList[currentStepIndex].classList.add('active');
             if(stepIndicatorsNodeList[currentStepIndex]) stepIndicatorsNodeList[currentStepIndex].classList.add('active');
+            console.log("Navigated to step index:", currentStepIndex);
             
             if (formContainer) {  formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); } 
             else { window.scrollTo(0,0); }
@@ -220,7 +186,7 @@
                 console.log("Fetched loan products:", allLoanProducts.length, allLoanProducts);
                 
                 populateInstitutionsDropdown(); 
-                populateLoanProductsDropdown(); 
+                // populateLoanProductsDropdown(); // Call this after an institution is selected
             } catch (error) {
                 console.error("Error fetching initial app data: ", error);
                 alert("Error loading initial data from database. Please check console and refresh.");
@@ -228,7 +194,7 @@
         }
 
         function populateLocations() {
-            if(!locationDropdown || !apartmentTypeRadiosNodeList) { console.warn("DOM elements not ready for populateLocations"); return; }
+            if(!locationDropdown || !apartmentTypeRadiosNodeList) { console.warn("Location dropdown or type radios not ready for populateLocations"); return; }
             const selectedTypeRadio = Array.from(apartmentTypeRadiosNodeList).find(radio => radio.checked);
             if(!selectedTypeRadio) { console.warn("No apartment type selected."); populateApartmentTypeAndLocationPlaceholders(); return; }
             const selectedType = selectedTypeRadio.value;
@@ -255,7 +221,7 @@
                  locationDropdown.innerHTML = '<option value="">-- Select Apartment Type First --</option>';
             }
         }
-        function populateApartmentTypeAndLocationPlaceholders() { // Helper if no data
+        function populateApartmentTypeAndLocationPlaceholders() { 
             if(locationDropdown) locationDropdown.innerHTML = '<option value="">-- Select Type First --</option>';
             if(apartmentInfoDiv) apartmentInfoDiv.style.display = 'none';
         }
@@ -286,7 +252,7 @@
                 institutionDropdown.innerHTML = '<option value="">-- No Financial Data --</option>';
                 return;
             }
-            const institutionNames = [...new Set(allLoanProducts.map(prod => prod.institution_name))].filter(name => name).sort((a, b) => a.localeCompare(b)); // Filter out undefined/null names
+            const institutionNames = [...new Set(allLoanProducts.map(prod => prod.institution_name))].filter(name => name).sort((a, b) => a.localeCompare(b)); 
             institutionDropdown.innerHTML = '<option value="">-- Select Institution --</option>';
             if (institutionNames.length > 0) {
                 institutionNames.forEach(name => {
@@ -324,48 +290,14 @@
         function generatePDFContentHTML() { /* ... (Same as previous) ... */ }
         async function saveAndDownload() { /* ... (Same as previous, ensure window.db is used) ... */ }
         
-        // --- DOMContentLoaded ---
-        document.addEventListener('firebaseReady', () => {
-            console.log("Event: firebaseReady received. Initializing DOM elements and listeners.");
-            initializeDOMElements(); 
-            
-            if (stepsNodeList.length > 0 && stepsNodeList[0]) {
-                 stepsNodeList.forEach((step, index) => { 
-                    if(step) step.style.display = index === 0 ? 'block' : 'none';
-                });
-            } else { console.error("firebaseReady: Steps array is empty."); }
+        // --- mainAppInitializer Function ---
+        function mainAppInitializer() {
+            console.log("mainAppInitializer: Initializing DOM elements and listeners.");
 
-            if (stepIndicatorsNodeList.length > 0 && stepIndicatorsNodeList[0]) {
-                stepIndicatorsNodeList[0].classList.add('active');
-            } else { console.error("firebaseReady: Step indicators array is empty."); }
-            
-            // Attach Event Listeners
-            if(apartmentTypeRadiosNodeList) apartmentTypeRadiosNodeList.forEach(radio => radio.addEventListener('change', populateLocations));
-            if(locationDropdown) locationDropdown.addEventListener('change', displayApartmentInfo);
-            if(institutionDropdown) institutionDropdown.addEventListener('change', populateLoanProductsDropdown);
-            if(loanDropdown) loanDropdown.addEventListener('change', displayLoanInfo); // Changed from updateLoanDetails
-            if(userCapitalInput) userCapitalInput.addEventListener('input', updateFinancialSummary);
-            if(saveAndDownloadPdfBtnNode) saveAndDownloadPdfBtnNode.addEventListener('click', saveAndDownload);
-            
-            if(emailPlanBtnNode) { /* Placeholder */ }
-
-            // Initial Data Population
-            if (window.db) { 
-                console.log("firebaseReady: Firebase client (window.db) confirmed. Fetching app data...");
-                fetchAppData(); 
-            } else {
-                console.error("firebaseReady: Firebase client (window.db) is NOT defined. Data fetching will NOT work.");
-                alert("Critical error: Database connection is not available. Please ensure Firebase initialized correctly and check console.");
-            }
-            updateFinancialSummary(); 
-        });
-
-        // Moved DOM element initialization to a function called within firebaseReady
-        function initializeDOMElements() {
             formContainer = document.getElementById('airbnbPlannerContainer');
             apartmentTypeRadiosNodeList = document.querySelectorAll('input[name="apartment_type"]');
             locationDropdown = document.getElementById('location_dropdown');
-            apartmentInfoDiv = document.getElementById('apartment_info');
+            apartmentDetailsDiv = document.getElementById('apartment_info');
             aptRentSpan = document.getElementById('rent_display');
             aptDepositSpan = document.getElementById('deposit_display');
             institutionDropdown = document.getElementById('institution_dropdown');
@@ -379,11 +311,63 @@
             totalCostDisplay = document.getElementById('total_cost_display');
             loanRequiredDisplay = document.getElementById('loan_required_display');
             qualifiedAmountDisplay = document.getElementById('qualified_amount_display');
-            saveAndDownloadPdfBtnNode = document.getElementById('saveAndDownloadPdfBtn');
+            saveAndDownloadPdfBtnNode = document.getElementById('saveAndDownloadPdfBtn'); // Corrected variable name
             emailPlanBtnNode = document.getElementById('emailPlanBtn');
+            
+            stepsNodeList.length = 0; 
+            stepIndicatorsNodeList.length = 0; 
+            for (let i = 1; i <= 4; i++) {
+                const stepEl = document.getElementById(`step${i}`);
+                if (stepEl) stepsNodeList.push(stepEl); else console.warn(`mainAppInitializer: Step element step${i} not found.`);
+                const indicatorEl = document.querySelector(`.step-indicator[data-step="${i}"]`);
+                if (indicatorEl) stepIndicatorsNodeList.push(indicatorEl); else console.warn(`mainAppInitializer: Indicator for step ${i} not found.`);
+            }
+            console.log("mainAppInitializer: Steps array length:", stepsNodeList.length);
+            
+            if (stepsNodeList.length > 0 && stepsNodeList[0]) {
+                 stepsNodeList.forEach((step, index) => { 
+                    if(step) step.style.display = index === 0 ? 'block' : 'none';
+                });
+            } else { console.error("mainAppInitializer: Steps array is empty."); }
 
-            console.log("DOM Elements Initialized:", { locationDropdown, institutionDropdown /*, etc. */});
+            if (stepIndicatorsNodeList.length > 0 && stepIndicatorsNodeList[0]) {
+                stepIndicatorsNodeList[0].classList.add('active');
+            } else { console.error("mainAppInitializer: Step indicators array is empty."); }
+            
+            // Attach Event Listeners to Navigation Buttons using class and data attributes
+            document.querySelectorAll('.next-btn-js').forEach(button => {
+                button.addEventListener('click', function() {
+                    const nextStepNum = parseInt(this.dataset.nextstep);
+                    navigateToStepLogic(nextStepNum -1); // Pass 0-based index
+                });
+            });
+            document.querySelectorAll('.prev-btn-js').forEach(button => {
+                button.addEventListener('click', function() {
+                    const prevStepNum = parseInt(this.dataset.prevstep);
+                    navigateToStepLogic(prevStepNum -1); // Pass 0-based index
+                });
+            });
+
+            if(apartmentTypeRadiosNodeList) apartmentTypeRadiosNodeList.forEach(radio => radio.addEventListener('change', populateLocations));
+            if(locationDropdown) locationDropdown.addEventListener('change', displayApartmentInfo);
+            if(institutionDropdown) institutionDropdown.addEventListener('change', populateLoanProductsDropdown);
+            if(loanDropdown) loanDropdown.addEventListener('change', displayLoanInfo);
+            if(userCapitalInput) userCapitalInput.addEventListener('input', updateFinancialSummary);
+            if(saveAndDownloadPdfBtnNode) saveAndDownloadPdfBtnNode.addEventListener('click', saveAndDownload);
+            if(emailPlanBtnNode) { /* Email placeholder */ }
+
+            if (window.db) { 
+                console.log("mainAppInitializer: Firebase client (window.db) confirmed. Fetching app data...");
+                fetchAppData(); 
+            } else {
+                console.error("mainAppInitializer: Firebase client (window.db) is NOT defined. Data fetching will NOT work.");
+                alert("Critical error: Database connection is not available.");
+            }
+            updateFinancialSummary(); 
         }
+
+        // Listen for the firebaseReady event dispatched from the head script
+        document.addEventListener('firebaseReady', mainAppInitializer);
     </script>
 </body>
 </html>
