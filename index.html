@@ -95,179 +95,164 @@
     </div>
 
     <script type="module">
-        // Declare module-scoped variables (these will be assigned in mainAppInitializer)
-        let formContainer, apartmentTypeRadiosNodeList, locationDropdown, apartmentInfoDiv, rentDisplay, depositDisplay;
-        let institutionDropdown, loanDropdown, loanInfoDiv, loanLimitDisplay, interestRateDisplay, loanTermDisplay, loanMultiplierDisplay;
-        let userCapitalInput, totalCostDisplay, loanRequiredDisplay, qualifiedAmountDisplay;
-        let saveAndDownloadPdfBtnNode, emailPlanBtnNode;
-        
-        const stepsNodeList = []; 
-        const stepIndicatorsNodeList = []; 
-        let currentStepIndex = 0; 
+    // --- MODULE-SCOPED VARIABLES ---
+    // All DOM elements are declared here
+    let formContainer;
+    const stepsNodeList = [];
+    const stepIndicatorsNodeList = [];
 
-        let allApartments = []; 
-        let allLoanProducts = []; 
+    // All form input elements
+    let apartmentTypeRadiosNodeList, locationDropdown, institutionDropdown, loanDropdown, userCapitalInput;
+    let saveAndDownloadPdfBtnNode, emailPlanBtnNode;
 
-        let selectedApartmentData = null;
-        let selectedLoanData = null;
+    // State Management: The single source of truth for which step is visible
+    let currentStepIndex = 0;
 
-        const FIXED_TOTAL_COST = 260000;
+    // Data placeholders
+    let allApartments = [];
+    let allLoanProducts = [];
+    let selectedApartmentData = null;
+    let selectedLoanData = null;
+    const FIXED_TOTAL_COST = 260000;
 
-        // --- FUNCTION DEFINITIONS ---
-        function validateStep(stepIndexToValidate) {
-            console.log("Validating step index:", stepIndexToValidate);
-            // Make sure elements exist before accessing .value
-            const fullNameInput = document.getElementById('full_name');
-            const emailInput = document.getElementById('email');
+    // --- CORE NAVIGATION LOGIC (Inspired by your working example) ---
 
-            if (stepIndexToValidate === 0) { // Step 1: Personal Info
-                if (!fullNameInput || !emailInput) { console.error("validateStep: Name or email input DOM element not found."); return false;}
-                const fullName = fullNameInput.value.trim();
-                const email = emailInput.value.trim();
-                if (!fullName || !email) { alert("Please enter your Full Name and Email."); return false; }
-                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailPattern.test(email)) { alert("Please enter a valid Email address."); return false; }
-            } else if (stepIndexToValidate === 1) { // Step 2: Apartment
-                 if (!selectedApartmentData) { alert("Please select an apartment type and location."); return false; }
-            } else if (stepIndexToValidate === 2) { // Step 3: Financing
-                if (!selectedLoanData) { alert("Please select a financial institution and loan product."); return false; }
-            }
-            console.log("Step", stepIndexToValidate + 1, "validation passed.");
-            return true; 
+    /**
+     * This function is the heart of the navigation. It loops through all steps
+     * and indicators, showing only the one at the currentStepIndex and hiding all others.
+     * This is the robust pattern from your example.
+     */
+    function updateStepVisibility() {
+        stepsNodeList.forEach((step, index) => {
+            step.classList.toggle('active', index === currentStepIndex);
+        });
+        stepIndicatorsNodeList.forEach((indicator, index) => {
+            indicator.classList.toggle('active', index === currentStepIndex);
+        });
+    }
+
+    /**
+     * This function controls the navigation flow.
+     * It validates the current step before proceeding.
+     */
+    function navigateToStep(targetStepNum) {
+        const targetStepIndex = targetStepNum - 1;
+
+        // Boundary check to prevent errors
+        if (targetStepIndex < 0 || targetStepIndex >= stepsNodeList.length) {
+            console.error("Invalid navigation target:", targetStepIndex);
+            return;
         }
-        
-        function _navigateToStep(targetStepNum) { // Underscore to indicate it's internal, called by listeners
-            const targetStepIndex = targetStepNum - 1; 
 
-            if (!stepsNodeList || stepsNodeList.length === 0) { 
-                console.error("_navigateToStep: stepsNodeList is not populated or empty."); return; 
+        // If moving forward, validate the current step first
+        if (targetStepIndex > currentStepIndex) {
+            if (!validateStep(currentStepIndex)) {
+                return; // Stop if validation fails
             }
-            if (targetStepIndex < 0 || targetStepIndex >= stepsNodeList.length) { 
-                console.error("_navigateToStep: Invalid targetStepIndex:", targetStepIndex); return; 
+        }
+
+        // Update the state
+        currentStepIndex = targetStepIndex;
+
+        // Update the UI based on the new state
+        updateStepVisibility();
+
+        // Scroll to the top of the form for a better user experience
+        formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // --- VALIDATION & OTHER FUNCTIONS ---
+
+    function validateStep(stepIndexToValidate) {
+        // This function remains the same as it correctly checks inputs
+        const fullNameInput = document.getElementById('full_name');
+        const emailInput = document.getElementById('email');
+
+        if (stepIndexToValidate === 0) { // Step 1
+            if (!fullNameInput.value.trim() || !emailInput.value.trim()) {
+                alert("Please enter your Full Name and Email.");
+                return false;
             }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+                alert("Please enter a valid Email address.");
+                return false;
+            }
+        } else if (stepIndexToValidate === 1) { // Step 2
+             if (!selectedApartmentData) { alert("Please select an apartment."); return false; }
+        } else if (stepIndexToValidate === 2) { // Step 3
+            if (!selectedLoanData) { alert("Please select a loan product."); return false; }
+        }
+        return true;
+    }
 
-            console.log(`_navigateToStep: Current index: ${currentStepIndex}, Target index: ${targetStepIndex} (Target Step Num: ${targetStepNum})`);
+    // (Your other helper functions like fetchAppData, populateLocations, etc., go here)
+    async function fetchAppData() { /* ... Your data fetching logic ... */ }
+    function populateLocations() { /* ... Your logic ... */ }
+    function displayApartmentInfo() { /* ... Your logic ... */ }
+    function populateInstitutionsDropdown() { /* ... Your logic ... */ }
+    function populateLoanProductsDropdown() { /* ... Your logic ... */ }
+    function displayLoanInfo() { /* ... Your logic ... */ }
+    function updateFinancialSummary() { /* ... Your logic ... */ }
+    async function saveAndDownload() { /* ... Your logic ... */ }
 
-            if (targetStepIndex > currentStepIndex) { 
-                if (!validateStep(currentStepIndex)) {
-                    console.log("_navigateToStep: Validation failed for current step, navigation stopped.");
-                    return; 
+
+    // --- MAIN INITIALIZER ---
+
+    function mainAppInitializer() {
+        console.log("App Initializing...");
+
+        // --- 1. Query all DOM elements ---
+        formContainer = document.getElementById('airbnbPlannerContainer');
+        document.querySelectorAll('.step').forEach(step => stepsNodeList.push(step));
+        document.querySelectorAll('.step-indicator').forEach(ind => stepIndicatorsNodeList.push(ind));
+
+        apartmentTypeRadiosNodeList = document.querySelectorAll('input[name="apartment_type"]');
+        locationDropdown = document.getElementById('location_dropdown');
+        institutionDropdown = document.getElementById('institution_dropdown');
+        loanDropdown = document.getElementById('loan_dropdown');
+        userCapitalInput = document.getElementById('user_capital');
+        saveAndDownloadPdfBtnNode = document.getElementById('saveAndDownloadPdfBtn');
+        emailPlanBtnNode = document.getElementById('emailPlanBtn');
+        document.getElementById('total_cost_display').innerText = FIXED_TOTAL_COST.toLocaleString();
+
+        // --- 2. Attach all event listeners ---
+
+        // Navigation Buttons (Next and Previous)
+        document.querySelectorAll('.next-btn-js, .prev-btn-js').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetStep = parseInt(this.dataset.targetstep, 10);
+                if (!isNaN(targetStep)) {
+                    navigateToStep(targetStep);
                 }
-            }
+            });
+        });
 
-            if(stepsNodeList[currentStepIndex]) stepsNodeList[currentStepIndex].classList.remove('active');
-            if(stepIndicatorsNodeList[currentStepIndex]) stepIndicatorsNodeList[currentStepIndex].classList.remove('active');
-            
-            currentStepIndex = targetStepIndex; 
-            
-            if(stepsNodeList[currentStepIndex]) stepsNodeList[currentStepIndex].classList.add('active');
-            if(stepIndicatorsNodeList[currentStepIndex]) stepIndicatorsNodeList[currentStepIndex].classList.add('active');
-            console.log("_navigateToStep: Navigated to step index:", currentStepIndex);
-            
-            if (formContainer) {  formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' }); } 
-            else { window.scrollTo(0,0); }
-        }
-        
-        async function fetchAppData() { /* ... (Paste your complete, correct fetchAppData function here) ... */ }
-        function populateLocations() { /* ... (Paste your complete, correct populateLocations function here) ... */ }
-        function displayApartmentInfo() { /* ... (Paste your complete, correct displayApartmentInfo function here) ... */ }
-        function populateInstitutionsDropdown() { /* ... (Paste your complete, correct populateInstitutionsDropdown function here) ... */ }
-        function populateLoanProductsDropdown() { /* ... (Paste your complete, correct populateLoanProductsDropdown function here) ... */ }
-        function displayLoanInfo() { /* ... (Paste your complete, correct displayLoanInfo function here) ... */ }
-        function updateFinancialSummary() { /* ... (Paste your complete, correct updateFinancialSummary function here) ... */ }
-        function generatePDFContentHTML() { /* ... (Paste your complete, correct generatePDFContentHTML function here) ... */ }
-        async function saveAndDownload() { /* ... (Paste your complete, correct saveAndDownload function here, ensuring it uses window.db) ... */ }
-        
+        // Other form element listeners
+        apartmentTypeRadiosNodeList.forEach(radio => radio.addEventListener('change', populateLocations));
+        locationDropdown.addEventListener('change', displayApartmentInfo);
+        institutionDropdown.addEventListener('change', populateLoanProductsDropdown);
+        loanDropdown.addEventListener('change', displayLoanInfo);
+        userCapitalInput.addEventListener('input', updateFinancialSummary);
+        saveAndDownloadPdfBtnNode.addEventListener('click', saveAndDownload);
 
-        // --- mainAppInitializer Function ---
-        function mainAppInitializer() {
-            console.log("mainAppInitializer: Script starting. Initializing DOM elements and listeners.");
-
-            // Initialize DOM element variables
-            formContainer = document.getElementById('airbnbPlannerContainer');
-            apartmentTypeRadiosNodeList = document.querySelectorAll('input[name="apartment_type"]');
-            locationDropdown = document.getElementById('location_dropdown');
-            apartmentDetailsDiv = document.getElementById('apartment_info');
-            aptRentSpan = document.getElementById('rent_display');
-            aptDepositSpan = document.getElementById('deposit_display');
-            institutionDropdown = document.getElementById('institution_dropdown');
-            loanDropdown = document.getElementById('loan_dropdown');
-            loanInfoDiv = document.getElementById('loan_info');
-            loanLimitDisplay = document.getElementById('loan_limit_display');
-            interestRateDisplay = document.getElementById('interest_rate_display');
-            loanTermDisplay = document.getElementById('loan_term_display');
-            loanMultiplierDisplay = document.getElementById('loan_multiplier_display');
-            userCapitalInput = document.getElementById('user_capital');
-            totalCostDisplay = document.getElementById('total_cost_display');
-            loanRequiredDisplay = document.getElementById('loan_required_display');
-            qualifiedAmountDisplay = document.getElementById('qualified_amount_display');
-            saveAndDownloadPdfBtnNode = document.getElementById('saveAndDownloadPdfBtn');
-            emailPlanBtnNode = document.getElementById('emailPlanBtn');
-            
-            // Populate steps and stepIndicators arrays
-            stepsNodeList.length = 0; 
-            stepIndicatorsNodeList.length = 0; 
-            for (let i = 1; i <= 4; i++) {
-                const stepEl = document.getElementById(`step${i}`);
-                if (stepEl) stepsNodeList.push(stepEl); else console.warn(`mainAppInitializer: Step element step${i} not found.`);
-                const indicatorEl = document.querySelector(`.step-indicator[data-step="${i}"]`);
-                if (indicatorEl) stepIndicatorsNodeList.push(indicatorEl); else console.warn(`mainAppInitializer: Indicator for step ${i} not found.`);
-            }
-            console.log("mainAppInitializer: Steps array length:", stepsNodeList.length, stepsNodeList);
-            console.log("mainAppInitializer: StepIndicators array length:", stepIndicatorsNodeList.length, stepIndicatorsNodeList);
-            
-            // Initial UI Setup for steps
-            if (stepsNodeList.length > 0 && stepsNodeList[0]) {
-                 stepsNodeList.forEach((step, index) => { 
-                    if(step) step.style.display = index === 0 ? 'block' : 'none'; // Ensure only first step is active
-                });
-                if (stepIndicatorsNodeList.length > 0 && stepIndicatorsNodeList[0]) {
-                     stepIndicatorsNodeList.forEach((ind, index) => ind.classList.toggle('active', index === 0));
-                }
-            } else { console.error("mainAppInitializer: Steps array is empty. Cannot set initial display properly."); }
-            
-            // Attach Event Listeners to Navigation Buttons
-document.querySelectorAll('.next-btn-js').forEach(button => {
-    button.addEventListener('click', function () {
-        const targetStep = parseInt(this.dataset.targetstep);
-        if (!isNaN(targetStep)) {
-            navigateToStep(targetStep);
-        }
-    });
-});
-document.querySelectorAll('.prev-btn-js').forEach(button => {
-    button.addEventListener('click', function () {
-        const targetStep = parseInt(this.dataset.targetstep);
-        if (!isNaN(targetStep)) {
-            navigateToStep(targetStep);
-        }
-    });
-});
-
-            // Attach Other Event Listeners
-            if(apartmentTypeRadiosNodeList) apartmentTypeRadiosNodeList.forEach(radio => radio.addEventListener('change', populateLocations));
-            if(locationDropdown) locationDropdown.addEventListener('change', displayApartmentInfo);
-            if(institutionDropdown) institutionDropdown.addEventListener('change', populateLoanProductsDropdown);
-            if(loanDropdown) loanDropdown.addEventListener('change', displayLoanInfo);
-            if(userCapitalInput) userCapitalInput.addEventListener('input', updateFinancialSummary);
-            if(saveAndDownloadPdfBtnNode) saveAndDownloadPdfBtnNode.addEventListener('click', saveAndDownload);
-            if(emailPlanBtnNode) { /* Email placeholder or actual logic */ }
-
-            // Initial Data Population
-            if (window.db) { 
-                console.log("mainAppInitializer: Firebase client (window.db) confirmed. Fetching app data...");
-                fetchAppData(); 
-            } else {
-                console.error("mainAppInitializer: Firebase client (window.db) is NOT defined at time of app data fetch. This should not happen if firebaseReady event worked.");
-                alert("Critical error: Database connection is not available for data fetching.");
-            }
-            if(totalCostDisplay) totalCostDisplay.innerText = FIXED_TOTAL_COST.toLocaleString(); // Set fixed cost
-            updateFinancialSummary(); // Initial call
+        // --- 3. Initial state setup ---
+        if (window.db) {
+            console.log("Firebase ready. Fetching data...");
+            fetchAppData();
+        } else {
+            console.error("Critical: Firebase not ready.");
+            alert("Error: Could not connect to the database.");
         }
 
-        // Listen for the firebaseReady event dispatched from the head script
-        console.log("MAIN SCRIPT: Adding event listener for firebaseReady.");
-        document.addEventListener('firebaseReady', mainAppInitializer);
-    </script>
+        // Ensure the initial view is correct.
+        updateStepVisibility();
+        updateFinancialSummary();
+        console.log("App Initialized Successfully.");
+    }
+
+    // Start the application once Firebase is ready.
+    document.addEventListener('firebaseReady', mainAppInitializer);
+
+</script>
 </body>
 </html>
