@@ -1,14 +1,8 @@
-# Located at the root of your project: netlify.toml
-
 [build]
-  # This tells Netlify where your functions are located.
   functions = "netlify/functions"
 
 [[redirects]]
-  # This is the crucial rule. It tells Netlify:
-  # "When you see a request for /.netlify/functions/ANYTHING..."
   from = "/.netlify/functions/*"
-  # "...pass it directly to the function without changing the HTTP method (e.g., POST)."
   to = "/.netlify/functions/:splat"
   status = 200
-  force = true # This ensures the rule is always applied
+  force = true
