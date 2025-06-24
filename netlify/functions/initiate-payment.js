@@ -1,54 +1,51 @@
-// Located at: netlify/functions/initiate-payment.js
-
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
-async function getAuthToken(env) {
-    // ... (This helper function is unchanged)
-}
+const axios = require('axios');
 
 exports.handler = async function(event) {
-    // --- **THE FIX IS HERE** ---
-    // Define the headers that give permission to your GitHub Pages site.
-    const corsHeaders = {
-        'Access-Control-Allow-Origin': 'https://bluefalcon-real.github.io',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    };
-
-    // Netlify functions must handle a "preflight" OPTIONS request first.
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 204, // "No Content"
-            headers: corsHeaders
-        };
-    }
-    // --- **END OF FIX** ---
-
+    // The OPTIONS check is no longer needed here because netlify.toml handles it.
     if (event.httpMethod !== 'POST') {
-        return { 
-            statusCode: 405, 
-            headers: corsHeaders, 
-            body: JSON.stringify({ message: 'Method Not Allowed' }) 
-        };
+        return { statusCode: 405, body: JSON.stringify({ message: 'Method Not Allowed' }) };
     }
 
     try {
-        // ... (The entire M-Pesa API call logic is unchanged)
+        // --- 1. Get Daraja Auth Token ---
+        const consumerKey = process.env.DARAJA_CONSUMER_KEY;
+        const consumerSecret = process.env.DARAJA_CONSUMER_SECRET;
+        const auth = 'Basic ' + Buffer.from(consumerKey + ':' + consumerSecret).toString('base64');
+        const tokenResponse = await axios({
+            method: 'get',
+            url: 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
+            headers: { 'Authorization': auth }
+        });
+        const token = tokenResponse.data.access_token;
         
-        // Return a success response WITH the permission headers
-        return {
-            statusCode: 200,
-            headers: corsHeaders,
-            body: JSON.stringify({ message: "STK push initiated successfully.", ...data })
+        // --- 2. Prepare and Initiate the STK Push ---
+        const { amount, phone } = JSON.parse(event.body);
+        const shortcode = process.env.DARAJA_SHORTCODE;
+        const passkey = process.env.DARAJA_PASSKEY;
+        const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
+        const password = Buffer.from(shortcode + passkey + timestamp).toString('base64');
+        const stkBody = {
+            BusinessShortCode: shortcode, Password: password, Timestamp: timestamp,
+            TransactionType: 'CustomerPayBillOnline', Amount: amount, PartyA: phone, PartyB: shortcode,
+            PhoneNumber: phone,
+            CallBackURL: "https://mellifluous-crisp-1ed2a9.netlify.app/.netlify/functions/callback", // Required placeholder
+            AccountReference: "BlueFalconPlan", TransactionDesc: "Payment for Plan"
         };
+        const darajaResponse = await axios({
+            method: 'post',
+            url: 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            data: stkBody
+        });
+
+        // --- 3. Return Success Response ---
+        return { statusCode: 200, body: JSON.stringify(darajaResponse.data) };
 
     } catch (error) {
-        console.error('Handler Error:', error);
-        // Return an error response WITH the permission headers
+        console.error('Handler Error:', error.response ? error.response.data : error.message);
         return {
-            statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ message: error.message || "An internal server error occurred." })
+            statusCode: error.response ? error.response.status : 500,
+            body: JSON.stringify({ message: error.response ? error.response.data.errorMessage : "An internal server error occurred." })
         };
     }
 };

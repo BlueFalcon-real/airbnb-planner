@@ -1,8 +1,16 @@
+# This is the configuration file for Netlify
+
 [build]
+  # Tells Netlify where your functions are located
   functions = "netlify/functions"
 
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-  force = true
+[[headers]]
+  # This rule applies to your function's URL
+  for = "/.netlify/functions/*"
+  [headers.values]
+    # This is the "permission slip" that tells browsers it's OK to accept
+    # requests from your GitHub Pages site.
+    Access-Control-Allow-Origin = "https://bluefalcon-real.github.io"
+    # This specifies which methods are allowed.
+    Access-Control-Allow-Methods = "POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
